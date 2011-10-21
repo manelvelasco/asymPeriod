@@ -1,0 +1,966 @@
+\documentclass[12pt,draftcls,onecolumn]{IEEEtran} % for first submission
+%\documentclass[journal]{IEEEtran} % journal style
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+
+\newtheorem{lemma}{Lemma}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}[theorem]{Definition}
+
+\newcommand{\ud}{\mathrm{d}}
+\newcommand{\nE}[1]{\left\|#1\right\|_{\mathsf e}}
+\newcommand{\nX}[1]{\left\|#1\right\|_{\mathsf x}}
+\newcommand{\equals}{\stackrel{\mbox{\tiny{\rm def}}}{=}}
+
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\NN}{\mathbb{N}}
+
+\DeclareMathOperator{\diag}{diag}
+
+\hyphenation{op-tical net-works semi-conduc-tor}
+
+\begin{document}
+
+\title{Asymptotic period of event-driven controllers}
+
+\author{Enrico~Bini, Manel~Velasco, and Pau~Mart\'i%
+  \thanks{E.~Bini is with Scuola Superiore Sant'Anna. M.~Velasco and
+    P.~Mart\'i are with UPC.}}
+
+\maketitle
+
+\begin{abstract}
+  The abstract goes here.
+\end{abstract}
+
+% \begin{keywords}
+
+% \end{keywords}
+
+
+
+%\PARstart{S}{tart} 
+
+\section{Introduction [Pau]}
+\label{sec:intro}
+
+Introduce the topic. Why it is important. Benefits of saving
+computational resource.
+
+Computational resources need to be estimated.
+
+Add related works. Specifically add all the works which have derived
+some property of the sampling sequence such as the minimum separation,
+etc.
+
+
+\section{Event-driven controllers [Pau]}
+\label{sec:event}
+
+Let us consider a linear time-invariant finite-dimensional system
+governed by the following differential equation
+\begin{equation}
+  \label{eq:sysDifEq}
+  \dot x=Ax+Bu
+\end{equation}
+with state $x\in\RR^n$ and input $u\in\RR^m$. The system is controlled
+by applying a feedback gain $L\in\RR^{m\times n}$ and keeping the
+input signal constant from one sampling instant to the next one.
+
+Let $\{t_k\}_{k\in\NN}$ be the sequence of sampling instants.  Since
+we are assuming a time-invariant system, we can assume without loss of
+generality the first sampling instant to be at time $0$ ($t_0=0$). We
+also find convenient to define the separation between two consecutive
+samples as
+\begin{equation}
+  \label{eq:defTauK}
+  \tau_k=t_{k+1}-t_k.
+\end{equation}
+Notice that any sequence of activations can be mapped in one-to-one
+correspondence with a sequence of separations
+$\{\tau_k\}_{k\in\NN}$ by~(\ref{eq:defTauK}) and
+\begin{equation}
+  \label{eq:tauKtoTk}
+  t_k=\sum_{h=0}^{k-1}\tau_h.
+\end{equation}
+
+We denote the state sampled at time $t_k$ by $x_k=x(t_k)$. In
+accordance to the feedback gain $L$, the input signal is
+\begin{equation}
+  \label{eq:input}
+  \forall k,\ \forall t\in[t_k,t_{k+1}),\quad
+  u(t) = u_k=L\,x_k
+\end{equation}
+
+If we set
+\begin{equation}
+  \label{eq:Phi}
+  \Phi(t) = e^{At}+\int_0^te^{A(t-s)}\ud s\,B L
+\end{equation}
+then, after the sampling instant $t_k$ the system evolves according to
+\begin{equation}
+  \label{eq:stateEvolve}
+  \forall t\in[t_k,t_{k+1})\quad
+  x(t) = \Phi(t-t_k)x_k
+\end{equation}
+
+In event-driven controllers the sampling instants are triggered by
+some condition on the values of the state rather than periodically.
+For example, it is often required to sample the state as soon it
+deviates significantly from the state $x_k$ sampled at $t_k$
+[\textbf{EB: add a reference}]. In this case, a condition to select
+the next sampling instant $t_{k+1}=t_k+\tau_k$ is
+\begin{equation}
+  \label{eq:execRuleNorm}
+  \frac{\nE{\Phi(\tau_k)x_k-x_k}}{\nX{x_k}} =\eta.
+\end{equation}
+where $\nE{\cdot}$ denotes a norm that is applied to the state
+``error'', while $\nX{\cdot}$ denotes a norm that normalize the error
+to the magnitude of the state.  This condition ensures that a relative
+error is controlled by the parameter $\eta>0$. As $\eta\to 0$ the
+system tends to be controlled in continuous-time. If we define a
+relative error function $\mathsf{rer}(\tau)$ as
+\begin{equation}
+  \label{eq:rer}
+  \mathsf{rer}(\tau,x) = \frac{\nE{(\Phi(\tau)-I)x}}{\nX{x}}
+\end{equation}
+then $\tau_k$ is implicitly defined as the smallest solution of
+\begin{equation}
+  \label{eq:rerEq}
+  \mathsf{rer}(\tau_k,x_k)=\eta
+\end{equation}
+The $\tau_k$ that solves~(\ref{eq:rerEq}) is function of $x_k$ and
+$\eta$.  
+
+In the next section we will investigate the existence and the possible
+values of the intersampling separation $\tau_k$.
+
+
+\section{Investigation on the intersampling separation}
+\label{sec:tauK}
+
+\subsection{Intersampling separation: existence [Manel]}
+\label{sec:tauKexists}
+
+The existence of a $\tau_k$ that solves~(\ref{eq:rerEq}) is not true
+in general. For example, if the system is stable and $\eta$ is large
+enough then the state will naturally converge to zero, preventing the
+relative error to ever satisfy the sampling rule dictated by
+condition~(\ref{eq:rerEq}). 
+\begin{theorem}[by Tabuada, etc.]
+  If $\eta<1$ then a solution of (\ref{eq:rerEq}) always exists.
+\end{theorem}
+\begin{proof}
+  \textbf{EB: Manel can you prove this? My idea is something like: is
+    the system is unstable the at some point $x$ will diverge and a
+    sample will be triggered. If the system is stable, the state $x$
+    will converge to $0$ and then by setting $\eta<1$ we will catch a
+    sample before it reaches the stable point}
+\end{proof}
+
+If there exists a solution of~(\ref{eq:rerEq}) then we define $\tau_k$
+as follows.
+\begin{definition}
+  The separation to the next sampling instant is
+  \begin{equation}
+    \label{eq:nextActDef}
+    \tau_k=\min\{\tau\geq 0: \mathsf{rer}(\tau,x_k) = \eta\}
+  \end{equation}
+\end{definition}
+If instead for some $x_k$ there is no solution of~(\ref{eq:rerEq})
+then we set $\tau_k=\infty$ meaning that the state is not sampled
+anymore since the relative error will never exceed $\eta$.
+
+This definition guarantees that the relative error is bounded by
+$\eta$ during the entire system lifetime.
+% , as proved in the next lemma.
+% \begin{lemma}
+%   \label{th:nextAct}
+%   If the sampling instants are defined by~(\ref{eq:nextActDef}), then
+%   \begin{equation}
+%     \label{eq:alwaysCond}
+%     \forall k\in\NN\quad
+%     \forall t\in[t_k,t_{k+1}[
+%     \quad
+%     \frac{\nE{x(t)-x_k}}{\nX{x_k}} \leq \eta
+%   \end{equation}
+% \end{lemma}
+% \begin{proof}
+%   We prove it by contradiction.
+
+%   First we observe that $f(x(t)-x_i,x_i)$ is continuous in $t$,
+%   because it is a composition of $f$, that is continuous by
+%   definition, and $x(t)$, that is also continuous because it
+%   represents the state trajectory (see~(\ref{eq:050})). Suppose it
+%   exists $\underline{i}\in\NN$ and
+%   $\underline{t}\in[a_{\underline i},a_{\underline i+1}[$ such that
+%   \begin{equation*}
+%     f(x(\underline t)-x_{\underline i},x_{\underline i}) > \eta
+%   \end{equation*}
+%   Since $f(x(a_{\underline i})-x_{\underline i},x_{\underline i}) = 0$
+%   and $f$ is a continuous function of $t$, for the intermediate value
+%   theorem it exists $t^*\in[a_{\underline i},\underline{t}]$ such that
+%   \begin{equation*}
+%     f(x(t^*)-x_{\underline i},x_{\underline i}) = \eta
+%   \end{equation*}
+%   and this contradicts the minimality of $a_{\underline i+1}$ since
+%   $t^* \leq \underline t < a_{\underline i+1}$.
+% \end{proof}
+
+
+\subsection{Intersampling separation: bounds [Pau, after Manel's
+  explanation of Figure~\ref{fig:mus}]}
+\label{sec:tauKbounds}
+
+If we write $\Phi(\tau)$ by its Taylor's expansion at $\tau=0$ with
+the Cauchy's reminder, we find
+\begin{align}
+  \label{eq:PhiTaylor}
+  \Phi(\tau) & = \Phi(0)+\dot{\Phi}(0)\tau+\ddot\Phi(\xi)\frac{\tau^2}2 \notag\\
+  & = I+(A+BL)\tau+e^{A\xi}A(A+BL)\frac{\tau^2}2
+\end{align}
+for some $\xi\in[0,\tau]$ \textbf{[Eq.~(\ref{eq:PhiTaylor}) to be
+  checked]}. Then, by introducing the norm $\nE{x}^*=\nE{(A+BL)x}$ (we
+know that $\nE{\cdot}^*$ is a norm because $A+BL$ is invertible), we
+find
+\begin{equation}
+  \label{eq:rerTaylor}
+  \mathsf{rer}(x,\tau) = \frac{\nE{(\tau I+\frac{\tau^2}{2}Ae^{A\xi})x}^*}{\nX{x}}
+\end{equation}
+that allows to bound the relative error as follows
+\begin{equation}
+  \label{eq:rerBounds}
+  \tau\frac{\nE{x}^*-\nE{\frac{\tau}{2}Ae^{A\xi}x}^*}{\nX{x}}
+  \leq\mathsf{rer}(x,\tau)\leq
+  \tau\frac{\nE{x}^*+\nE{\frac{\tau}{2}Ae^{A\xi}x}^*}{\nX{x}}
+\end{equation}
+
+
+Then the relative error is bounded as follows
+\begin{equation}
+  \label{eq:rerBounds}
+  \forall\tau\in[0,\overline\tau]\qquad
+  \alpha_\mathsf{low}(x)\tau\leq\mathsf{rer}(\tau,x)\leq\alpha_\mathsf{up}(x)\tau
+\end{equation}
+which allows to establish a boundary on the solution 
+
+The sampling separation $\tau_k$, as a function of $x_k$ is lower
+semi-continuous. Hence it has a maximum. \textbf{EB: to be revised}
+
+\begin{theorem}
+  The sampling separation is lower bounded by $\tau_{\mathsf{m}}>0$
+  and upper bounded by $\tau_{\mathsf{M}}<\infty$.
+  \label{th:lowUpBounds}
+\end{theorem}
+\begin{proof}
+  From the continuity of $\tau_k$ with respect to $x_k$ 
+  and the compactness of the projective space $\RR\mathbb{P}^{n-1}$, it
+  follows by applying Bolzano Weirstra\ss.
+\end{proof}
+
+While Theorem~\ref{th:lowUpBounds} establishes the existence of these
+bounds with very general hypothesis, it is actually possible to
+compute the values of the bounds in the standard case of\dots
+
+\begin{figure}
+  \centering
+  \includegraphics[]{octave/mus}
+  \caption{Bounds.}
+  \label{fig:mus}
+\end{figure}
+
+As you can notuce, if $\eta>1$ you are not guaranteed that $\tau_k$
+exists.
+
+\subsection{Event-driven controllers: properties [Enrico]}
+\label{sec:eventProp}
+
+The relative error function $\mathsf{rer}$ is defined over
+$\RR^+\times\RR^n\setminus\{0\}$, and it is non-negative and
+continuous.
+
+From the linearity of the system and the particular selection of
+execution rule~(\ref{eq:execRuleNorm}) as ratio between two norms, it
+follows that the relative error is invariant to a scaling of the
+state.
+\begin{lemma}
+  \begin{equation}
+    \label{eq:scaling}
+    \forall \tau\geq 0,\ \forall x\neq 0,\ \forall \lambda\neq 0\quad
+    \mathsf{rer}(\tau,x)=\mathsf{rer}(\tau,\lambda x)
+  \end{equation}
+ \label{lem:scalingOK}
+\end{lemma}
+\begin{proof}
+  The lemma simply follows by writing the definition
+  $\mathsf{rer}(\tau,\lambda x)$
+  \begin{align*}
+    \mathsf{rer}(\tau,\lambda x) 
+    & = \frac{\nE{\Phi(\tau)\lambda x-\lambda x}}{\nX{\lambda x}} \\
+    & = \frac{|\lambda|\nE{\Phi(\tau)x- x}}{|\lambda|\nX{x}}
+    = \mathsf{rer}(\tau,x),
+  \end{align*}
+  which proves the lemma.
+\end{proof}
+
+Lemma~\ref{lem:scalingOK} asserts that the dependency on the state of
+the relative error can actually be defined over the projective space
+$\RR\mathbb{P}^{n-1}$ rather than over $\RR^n\setminus\{0\}$.
+
+To establish other properties of the intersampling separation, we
+assume that the two norms $\nE{\cdot}$ and $\nX{\cdot}$ over the error
+and the state respectively, are formulated as follows
+\begin{equation}
+  \label{eq:quadraticNomrs}
+  \nE{x} = \sqrt{x^TQ_\mathsf{e}x}
+  \qquad
+  \nX{x} = \sqrt{x^TQ_\mathsf{x}x}
+\end{equation}
+with $Q_\mathsf{e},Q_\mathsf{x}\in\RR^{n\times n}$ being symmetric and
+positive definite matrices. Thanks to its properties, $Q_\mathsf{x}$
+can be written as
+\begin{align*}
+  Q_\mathsf{e}&=M_\mathsf{e}^T\diag(\lambda_i^\mathsf{e})M_\mathsf{e}
+  = M_\mathsf{e}^T\diag(\sqrt{\lambda_i^\mathsf{e}})\diag(\sqrt{\lambda_i^\mathsf{e}})M_\mathsf{e}\\
+  & =H_\mathsf{e}^TH_\mathsf{e}\qquad \text{with
+    $H_\mathsf{e}=\diag(\sqrt{\lambda_i^\mathsf{e}})M_\mathsf{e}$}
+\end{align*}
+being $\lambda_i^\mathsf{e}$ the (positive) eigenvalues of
+$Q_\mathsf{e}$.  With the same arguments we can write
+\begin{align*}
+  Q_\mathsf{x}& =H_\mathsf{x}^TH_\mathsf{x}\qquad \text{with
+    $H_\mathsf{x}=\diag(\sqrt{\lambda_i^\mathsf{x}})M_\mathsf{x}$}
+\end{align*}
+where $\lambda_i^\mathsf{x}$ are in this case the (positive)
+eigenvalues of $Q_\mathsf{x}$ and $M_\mathsf{x}$ is the orthonormal
+basis that enables the diagonalization of $Q_\mathsf{x}$. Notice that
+both $H_\mathsf{e}$ and $H_\mathsf{x}$ are invertible. We can now
+write the relative error function as
+\begin{equation}
+  \mathsf{rer}(\tau,x)=
+  \frac{\|H_\mathsf{e}(\Phi(\tau)-I)x\|}
+  {\|H_\mathsf{x}x\|} = \frac{\|G(\tau)y\|}
+  {\|y\|}
+  \label{eq:rerGtau}
+\end{equation}
+where we changed variable through
+\begin{equation}
+  \label{eq:varChange}
+  y=H_\mathsf{x}x \qquad x=H_\mathsf{x}^{-1}y
+\end{equation}
+and we set
+\begin{equation}
+  \label{eq:setGtau}
+  G(\tau)=H_\mathsf{e}(\Phi(\tau)-I)H_\mathsf{x}^{-1}
+\end{equation}
+
+From~(\ref{eq:rerGtau}), it follows that
+\begin{equation}
+  \label{eq:u=lowUpB}
+  \sqrt{\mu_\mathsf{min}(\tau)}\leq\mathsf{rer}(\tau,x)\leq
+  \sqrt{\mu_\mathsf{max}(\tau)}
+\end{equation}
+where $\mu_\mathsf{min}$ and $\mu_\mathsf{max}$ are the minimum and
+the maximum eigenvalues of $G^T\!(\tau)\,G(\tau)$ (always real-valued
+and non-negative). Notice that the bounds of~(\ref{eq:u=lowUpB}) are
+tight. If, for some $\tau$, $y=H_\mathsf{x}x$ belongs to the
+eigenspace of $\mu_\mathsf{max}(\tau)$ ($\mu_\mathsf{min}(\tau)$
+respectively) then $\mathsf{rer}(\tau,x)$ is exactly equal to
+$\sqrt{\mu_\mathsf{max}(\tau)}$ ($\sqrt{\mu_\mathsf{min}(\tau)}$
+resp.).
+
+First we find the minimum separation between two consecutive sampling
+instants denoted by $s_1$ in accordance to~(\ref{eq:I:defIk}). From
+Theorem~\ref{th:lowUpBounds}, it follows that the minimum exists.
+Since the relative error $\mathsf{rer}$ is differentiable, then the
+variation of $\tau$ at the minimum must be zero along all possible
+state variations. Following this new formalism, the time separation
+associated to a state $x=H_\mathsf{x}^{-1}y$, is such that
+\begin{equation}
+  y^TG^TGy=\eta^2y^Ty
+  \label{eq:condEquality}
+\end{equation}
+where, for simplicity, we didn't report the dependency on $\tau$ of
+$G$.  If we make a small perturbation $\ud \tau$ on the period and a
+small perturbation $\ud y$ on the state, we find
+\begin{equation*}
+  (y+\ud y)^T(G+\dot G\,\ud\tau)^T(G+\dot G\,\ud\tau)(y+\ud y)
+  =\eta^2(y+\ud y)^T(y+\ud y)
+\end{equation*}
+and, keeping in mind~(\ref{eq:condEquality}), it becomes
+\begin{equation*}
+  \ud y^TG^TGy+y^T\dot G^TGy\,\ud\tau +y^TG^T\dot Gy\,\ud\tau+
+  y^TG^TG\,\ud y 
+  =\eta^2(y^T\ud y+\ud y^T y)
+\end{equation*}
+since the equation is scalar then it becomes
+\begin{equation}
+  y^TG^T\dot Gy\,\ud\tau+ y^T(G^TG-\eta^2I)\,\ud y=0
+  \label{eq:variationXtau}
+\end{equation}
+finally, if we assume that the state $y$ varies over a unit sphere,
+then $y^T \ud y =0$ and $y^Ty=1$, from which it follows
+\begin{equation}
+  x^TG^T\dot Gx\,\ud\tau+ x^TG^TG\,\ud x=0
+  \label{eq:variationXtauOnSphere}
+\end{equation}
+
+Eq.~(\ref{eq:variationXtauOnSphere}) allows to estimate the variation
+$\ud\tau$ of the period for a small variation $\ud x$ of the state
+around the unit sphere $\{\|x\|=1\}$, that is
+\begin{equation}
+  \label{eq:varTau}
+  \ud\tau=-\frac{x^TG^TG\,\ud x}{x^TG^T\dot Gx}
+\end{equation}
+Equation~(\ref{eq:varTau}) enables the extraction of a Lipschitz
+constant for the period as a function of the state.
+
+What is the region along which the sampling period does not change? If
+we set $\ud \tau=0$ in~(\ref{eq:variationXtauOnSphere}) we find
+\begin{equation}
+  \label{eq:varXsameTau}
+  x^TG^TG\,\ud x =0
+\end{equation}
+together with the orthogonality constraint
+\begin{equation}
+  \label{eq:ortho}
+  x^T\ud x=0
+\end{equation}
+
+Equation~(\ref{eq:varTau}) allows to estimate the
+\begin{equation}
+  \label{eq:MaxDtau}
+  |\ud\tau|=\left|\frac{x^TG^TG\,\ud x}{x^TG^T\dot G\,x}\right|
+  = \left|\frac{x^TG^TG\,\ud x}{x^TG^T G\,x}\right|\cdot
+  \left|\frac{x^TG^TG\, x}{x^TG^T\dot G\,x}\right|
+\end{equation}
+where the multiplication by $|x^TG^TGx|$ was possible thanks to the
+fact that $x\notin\ker G$.
+
+$G^TG$ is symetric positive semi-definite, hence it can be
+diagonalized over an orthonormal basis.
+
+Let us consider the 2-dimensional case (if then $n$ dimensional case
+we consider to move along the two dimensions of maximum and minimum
+eigenvalues):
+\begin{equation*}
+  x = [\cos\theta, \sin\theta]^T
+  \qquad
+  y = r[-\sin\theta,\cos\theta]^T
+\end{equation*}
+notice that $y$ has been selected orthogonal to $x$, as $\ud x$. If we
+suppose that $G^TG=\diag(\lambda_1,\lambda_2)$ with
+$\lambda_1\geq\lambda_2\geq 0$, then
+\begin{equation*}
+  |x^TG^TGy|=r(\lambda_1-\lambda_2)|\cos\theta\sin\theta|
+  =\frac r2(\lambda_1-\lambda_2)|\sin2\theta|
+\end{equation*}
+and
+\begin{align*}
+  |x^TG^TGx| & =\lambda_1\cos^2\theta+\lambda_2\sin^2\theta
+  =\lambda_1\cos^2\theta+\lambda_2(1-\cos^2\theta) \\
+  & = \lambda_2+(\lambda_1-\lambda_2)\cos^2\theta
+  = \lambda_2+(\lambda_1-\lambda_2)\frac 12(1+\cos2\theta)\\
+  & = \frac 12(\lambda_2+\lambda_1+(\lambda_1-\lambda_2)\cos2\theta)
+\end{align*}
+
+For simplicity we also replace $2\theta$ with $\theta$. Then we have
+to find the maximum value of
+\begin{equation}
+  \label{eq:ratioNorms}
+  \left|\frac{x^TG^TGy}{x^TG^TGx}\right|
+  =r\frac{(\lambda_1-\lambda_2)\sin\theta}
+  {\lambda_1+\lambda_2+(\lambda_1-\lambda_2)\cos\theta}
+\end{equation}
+
+A simple upper bound of~(\ref{eq:ratioNorms}) could be found by upper
+bounding $\sin\theta$ by $1$ and lower bounding $\cos\theta$ by
+$-1$. By doing so we find
+\begin{equation}
+  \label{eq:loose UpB}
+  \left|\frac{x^TG^TGy}{x^TG^TGx}\right|\leq
+  r\frac{\lambda_1-\lambda_2}
+  {\lambda_1+\lambda_2-(\lambda_1-\lambda_2)}
+  =r\frac{\lambda_1-\lambda_2}{2\lambda_2}
+\end{equation}
+
+A tighter upper bound can be found by computing the maximum
+of~(\ref{eq:ratioNorms}) by differentiating it with respect to
+$\theta$. The numerator of the derivative is
+\begin{multline}
+  \label{eq:derivTheta}
+  (\lambda_1-\lambda_2)\cos\theta(\lambda_1+\lambda_2+(\lambda_1-\lambda_2)\cos\theta)
+  +(\lambda_1-\lambda_2)^2\sin^2\theta = \\
+  (\lambda_1^2-\lambda_2^2)\cos\theta+(\lambda_1-\lambda_2)^2
+\end{multline}
+
+The derivative of~(\ref{eq:ratioNorms}) is zero when its numerator,
+reported in~(\ref{eq:derivTheta}), is zero. This happes when
+\begin{equation}
+  \label{eq:cosThetaVal}
+  \cos\theta=-\frac{(\lambda_1-\lambda_2)^2}{(\lambda_1^2-\lambda_2^2)}
+  =-\frac{\lambda_1-\lambda_2}{\lambda_1+\lambda_2}
+\end{equation}
+and consequently
+\begin{equation}
+  \label{eq:sinThetaVal}
+  \sin\theta=\sqrt{1-\frac{(\lambda_1-\lambda_2)^2}{(\lambda_1+\lambda_2)^2}}
+  =\frac{2\sqrt{\lambda_1\lambda_2}}{\lambda_1+\lambda_2}
+\end{equation}
+
+If we replace~(\ref{eq:cosThetaVal}) and (\ref{eq:sinThetaVal})
+in~(\ref{eq:ratioNorms}) we can finally find the upper bound to the
+desired expression
+\begin{multline}
+  \label{eq:upBound1stPiece}
+  \frac{x^TG^TGy}{x^TG^TGx}\leq
+  r\frac{(\lambda_1-\lambda_2)\frac{2\sqrt{\lambda_1\lambda_2}}{\lambda_1+\lambda_2}}
+  {\lambda_1+\lambda_2-(\lambda_1-\lambda_2)\frac{\lambda_1-\lambda_2}{\lambda_1+\lambda_2}}=
+  r\frac{2(\lambda_1-\lambda_2)\sqrt{\lambda_1\lambda_2}}
+  {(\lambda_1+\lambda_2)^2-(\lambda_1-\lambda_2)^2}\\
+  = r\frac{\lambda_1-\lambda_2}{2\sqrt{\lambda_1\lambda_2}}
+\end{multline}
+which is an upper bound tighter than~(\ref{eq:loose UpB}).
+
+Find an estimate also of the second term
+\[
+\left|\frac{x^TG^TG\, x}{x^TG^T\dot G\,x}\right|
+\]
+
+
+\section{Asymptotic period}
+\label{sec:asym}
+
+\subsection{Definition and existence [Pau]}
+\label{sec:asymExists}
+
+The amount of computational resource required by a periodic controller
+with period $\tau$ is clearly inversely proportional to the period
+$\tau$ itself.
+
+If the controller is not periodic, however, then some alternate
+measure of the computational resource must be required.  When the
+sampling sequence is not periodic, the real-time analysis is performed
+by extracting the maximum requirement of computing resource under all
+possible circumstances~\cite{Cru91,Gre93,Vel08a}. In event-driven
+controllers, with a given error tolerance $\eta$, the only variability
+is due to the initial system state $x_0$.
+
+For this reason, it is convenient to extract from the sampling
+instants the, so-called, worst-case sequence.
+\begin{definition}
+  Given a sequence of sampling instants, we define the
+  \emph{worst-case sequence} as follows
+  \begin{equation}
+    \label{eq:I:defIk}
+    s_k=\inf_{x_0}\{t_k\} = \inf_{x_0}\left\{\sum_{i=0}^{k-1}\tau_i\right\}
+    \qquad k=1,2,\ldots
+  \end{equation}
+  \label{def:S:wcSeq}
+\end{definition}
+Basically $s_k$ is the smallest sum of $k$ consecutive interarrivals.
+This sequence is used to analyze the schedulability of an event-driven
+controller~\cite{Vel08a}.
+
+The idea is to define an \emph{asymptotic period} $\tau_\infty$ as
+$\frac{s_k}k$, with large $k$. Fortunately, the sequence $\{s_k\}$ has
+an interesting property that enables a correct definition of the
+asymptotic period.
+\begin{lemma}
+  The worst-case sequence $\{s_k\}_{k\geq 1}$ is \emph{superadditive},
+  that is
+  \begin{equation*}
+    %\label{eq:I:superAd}
+    s_{n+m} \geq s_n+s_m
+  \end{equation*}
+  \label{lem:I:superAdd}
+\end{lemma}
+\begin{proof}
+  By definition
+  \begin{align*}
+    s_{n+m} & = \inf_{x_0}\{t_{n+m}\} = \inf_{x_0}\{t_{n+m}-t_m+t_m\} \\
+    & \geq \inf_{x_m}\{t_{n+m}-t_m\}+\inf_{x_0}\{t_m\} \\
+    & = \inf_{x_0}\{t_n\}+s_m= s_n+s_m
+  \end{align*}
+  as required.
+\end{proof}
+
+Thanks to a result attributed to Fekete~\cite{Fek23} we can assert an
+interesting property of superadditive sequences. We report here an
+alternative proof, which we believe is useful since the proof itselft
+provides useful arguments on the speed of convergence of $\frac{s_k}k$
+to its limit.
+\begin{theorem}[by Fekete~\cite{Fek23}]
+  Let $\{s_k\}_{k\geq 1}$ be the worst-case sequence of an
+  event-driven controller. Then it exists the limit
+  \begin{equation*}
+    % \label{eq:I:Fekete}
+    \lim_{k\to\infty}\frac{s_k}k =\sup\frac{s_k}k < \infty
+  \end{equation*}
+  \label{th:I:fekete}
+\end{theorem}
+\begin{proof}
+  From Theorem~\ref{th:lowUpBounds} it follows that
+  \begin{equation*}
+    \sup_{x_0}\{t_1\}=S<\infty.
+  \end{equation*}
+  For any value of $m$ (later we will show how to choose it), by
+  euclidean division we can always write
+  \begin{equation}
+    n=dm+r\quad 0\leq r \leq m-1
+    \label{eq:I:fekSetp2}
+  \end{equation}
+  From the hypothesis of superadditivity of $\{s_k\}$, we have
+  \begin{equation*}
+    s_n =s_{dm+r} \geq s_{dm}+s_r \geq ds_m+s_r
+  \end{equation*}
+  from which it follows
+  \begin{equation*}
+  \frac{s_n}n \geq \frac d n s_m +\frac 1 n s_r
+  \end{equation*}
+  From~(\ref{eq:I:fekSetp2}) we have
+  \begin{equation*}
+    \frac d n = \frac 1 m - \frac{r}{nm}
+  \end{equation*}
+  which allows us to rewrite the lower bound for $\frac{s_n}n$ as
+  \begin{equation}
+    \frac{s_n}n \geq \frac d n s_m +\frac 1 n s_r = 
+    \frac{s_m}m -\frac 1 n\left(\frac r m s_m-s_r\right)
+    \geq
+    \frac{s_m}m -\frac 1 n\max_r\left\{\frac r m s_m-s_r\right\}
+    \label{eq:I:beforeBranch}
+  \end{equation}
+
+  From the definition of limit of a sequence to a finite value
+  $\sup_k\frac{s_k}k$, we have to prove that
+  \begin{equation*}
+    \forall \varepsilon>0,\ \exists \overline{n}\in\NN,
+    \ \forall n\geq\overline{n}
+    \quad
+    -\varepsilon <\sup\frac{s_k}k-\frac{s_n}{n} < \varepsilon
+    % \label{eq:I:limitFinite}
+  \end{equation*}
+  The first inequality is trivial: from the definition of $\sup$
+  \begin{equation*}
+    \sup\frac{s_k}k-\frac{s_n}{n} \geq 0 > -\varepsilon
+  \end{equation*}
+  The second inequality requires more efforts.  From the definition of
+  $\sup$, it exists some $m$ such that
+  \begin{equation}
+    \frac{s_m}m > \sup\frac{s_k}k -\frac{\varepsilon}2
+    \label{eq:I:dimFeketeStep1}
+  \end{equation}
+  We choose the smallest possible $m$. Since $m$ is the minimum among
+  those ones satisfying~(\ref{eq:I:dimFeketeStep1}), we have
+  \begin{equation}
+    \label{eq:I:selectM}
+    \frac{s_m}m \geq \frac{s_r}r \quad 0\leq r\leq m-1
+  \end{equation}
+  For such value of $m$ we have
+  \begin{equation}
+    \sup_k\frac{s_k}k-\frac{s_n}{n} <
+    \frac{s_m}m+\frac{\varepsilon}2-\frac{s_n}{n}
+    \label{eq:I:upperFekete}
+  \end{equation}
+  We choose
+  \begin{equation}
+    \label{eq:I:selectN}
+    \overline{n} \geq \frac 2\varepsilon \max_r\left\{\frac r m s_m-s_r\right\}
+  \end{equation}
+  Notice that~(\ref{eq:I:selectM}) implies that the $\max$
+  in~(\ref{eq:I:selectN}) is greater than or equal to zero.  Then
+  $\forall n\geq \overline{n}$, Equation~(\ref{eq:I:upperFekete}) can
+  be further upper bound by using the inequality~(\ref{eq:I:beforeBranch})
+  \begin{equation*}
+    \sup_k\frac{s_k}k-\frac{s_n}{n} <
+    \frac{s_m}m+\frac{\varepsilon}2-\frac{s_n}{n}
+    \leq \frac{\varepsilon}2 +\frac 1 n\max_r\left\{\frac r m s_m-s_r\right\} 
+    \leq
+    \varepsilon
+  \end{equation*}
+  because of the choice of $n$ according to~(\ref{eq:I:selectN}). This
+  concludes the proof.
+\end{proof}
+The proof also provides an explicit measure of the speed of
+convergence to $\tau_\infty$.
+
+Since the sequence $\left\{\frac{s_k}k\right\}_{k\in\NN}$ admits a
+limit, it is natural to define the asymptotic period as follows.
+\begin{definition}
+  Given an event-driven controller and its worst-case sampling
+  sequence $\{s_k\}_{k\in\NN}$, we define its \emph{asymptotic period}
+  $\tau_\infty$ as
+  \begin{equation}
+    \label{eq:I:defAsymPeriod}
+    \tau_\infty \equals \lim_k\frac{s_k}k
+  \end{equation}
+\end{definition}
+
+% We observe that in the special case of periodic sampling the
+% asymptotic period coincides with the sampling period. In fact
+% \begin{equation*}
+%   \tau_k=\tau
+%   \quad\Rightarrow\quad
+%   t_k=k\tau
+%   \quad\Rightarrow\quad
+%   s_k=k\tau
+%   \quad\Rightarrow\quad
+%   \lim_k \frac{s_k}k = \tau
+% \end{equation*}
+
+\section{Computational aspects}
+\label{sec:comupteAsym}
+
+First we investigate the computation of $\tau_k$ then the computation
+of the asymptotic period.
+
+\paragraph{Computation of $\tau$ [Pau]}
+
+The sampling period $\tau$ associated to any state $x$ is such that
+\begin{equation}
+  \frac{\nE{\Psi(\tau)(A+BL)x}}{\nX{x}} =\eta
+  \label{eq:samPeriod}
+\end{equation}
+
+By multiplying and dividing $\Psi$ by $\tau$ we find
+\begin{gather*}
+  \tau\frac{\nE{\frac 1{\tau}\Psi(\tau)(A+BL)x}}{\nX{x}} =\eta
+\end{gather*}
+
+Hence $\tau$ must be solution of the following equation
+\begin{equation}
+  \tau =\eta\frac{\nX{x}}{\nE{\frac 1{\tau}\Psi(\tau)(A+BL)x}}
+  \label{eq:eqTau}
+\end{equation}
+which can be solved iteratively by the following sequence defined by
+recurrence
+\begin{equation}
+  \label{eq:recSequence}
+  \begin{cases}
+    y = (A+BL)x \\
+    \tau^{(0)} = \eta\frac{\nX{x}}{\nE{y}}\\
+    \tau^{(k+1)} =
+    \eta\frac{\nX{x}}{\nE{\frac 1{\tau^{(k)}}\Psi(\tau^{(k)})y}}
+  \end{cases}
+\end{equation}
+
+
+\paragraph{Computation of the asymptotic period [Manel]}
+
+The sequence $\frac{s_k}k$ tends to $\tau_\infty$ and it can be
+bounded by
+\[
+\tau_\infty-c\frac 1k\leq\frac{s_k}k\leq\tau_\infty+c\frac 1k
+\]
+(this follows from the proof of Theorem~\ref{th:I:fekete}), where $c$
+is related to the $\tau_\mathsf{max}$ and $\tau_\mathsf{min}$.
+
+The idea is then to find a lower bound for $\tau_\infty$ as follows
+with a given error $\varepsilon$ by setting $k=\frac c\varepsilon$.
+
+
+Dominant eigenvectors. Limit cycle/circle.
+
+Euler number. 
+
+
+
+Spanning all the states with some granularity, depending on the
+granularity and the Lipschitz constant find the bounds.
+
+Or span over just the limit circle. 
+
+Or a single dominant eigenvalue.
+
+
+\section{Equiperiod Stuff}
+\label{sec:equiP}
+
+
+
+
+
+\paragraph{On the gradient of $\tau$ w.r.t.\ $x$}
+
+If we write explicitly the dependency of $\tau$ on $x$ (as the
+solution of~(\ref{eq:condEquality})) we can write:
+\begin{equation}
+  \label{eq:dTau}
+  \ud\tau = \nabla\tau\,\ud x
+\end{equation}
+where $\nabla\tau$ is the row vector of the gradient of $\tau$ w.r.t.\
+$x$.
+
+Then by replacing $\ud\tau$ in~(\ref{eq:variationXtauOnSphere}), we
+find
+\begin{gather}
+  x^TG^T\dot Gx\nabla\tau\,\ud x+ x^TG^TG\,\ud x=0 \notag\\
+  x^TG^T(\dot Gx\nabla\tau+ G)\ud x=0  
+  \label{eq:towardGradTau}
+\end{gather}
+
+
+\paragraph{Assuming the norm is $\max_i$}
+
+If $\nE{x}=\max_i|a_i^Tx|$ and $\nX{x}=x^Tx$
+then~(\ref{eq:execRuleNorm}) can be rewritten as
+\begin{equation}
+  \label{eq:normEisMax}
+  \frac{\nE{G(\tau_k)x_k}}{\nX{x_k}} = \eta
+\end{equation}
+
+\paragraph{Small variation of the next state}
+
+\begin{align*}
+  \ud x_{k+1}&=(I+G(\tau_k))\ud x_k+\dot G(\tau_k)x_k\ud \tau_k \\
+  \ud x_{k+1}&=(I+G(\tau_k))\ud x_k
+  -\dot G(\tau_k)x_k \frac{x_k^TG(\tau_k)^TG(\tau_k)\,\ud x_k}
+  {x_k^TG(\tau_k)^T\dot G(\tau_k)x_k}
+\\
+\end{align*}
+
+
+\section{Other stuff}
+\label{sec:othe}
+
+Two sequences with the same asymptotic period $\tau_\infty$ can be
+indeed very different. Hence it is not appropriate to represent a
+sampling sequence by the only asymptotic period. For example, the
+sequences $\{\tau_k\}_{k\in\NN}$ represented by the interarrivals
+$\{8,8,8,8,8,8,\ldots\}$ and $\{4,12,4,12,4,12,\ldots\}$ have the same
+asymptotic period $\tau=8$.
+
+The classic way to differentiate among them can be to add the minimum
+and maximum separation $s_1$ and $S_1$ to the asymptotic period $\tau$
+to represent synthetically a sequence. Usually, in real-time
+literature, the differentiation among these values is called
+jitter~\cite{But04}. The effect of jitter in control systems is
+widely studied~\cite{Mar01,Cer04}.\index{sampling sequence!jitter}
+
+However, following this method the two sequences with intersamples \\
+$\{4,12,4,12,4,12,\ldots\}$ and $\{4,4,4,12,12,12,\ldots\}$ have the
+same representation ($\tau=8$, $s_1=4$, and $S_1=12$).  For this
+reason we introduce the following definition.\index{sampling sequence!burstiness}
+\begin{definition}
+  Given a sequence of sampling instants $\{t_k\}_{k\in\NN}$, we
+  define its \emph{burstiness}\index{burstiness} $\beta$ as
+  \begin{equation}
+    \label{eq:I:defB}
+    \beta\equals\sup_k\left\{k-\frac{s_k}{\tau}\right\}
+  \end{equation}
+\end{definition}
+\index{sampling sequence!burstiness}
+% Below we prove that the burstiness $\beta$ of a sequence is finite.
+% \begin{lemma}
+%   \label{lem:I:finiteB}
+%   The burstiness $\beta$ defined in~(\ref{eq:I:defB}) is finite.
+% \end{lemma}
+% \begin{proof}
+%   Since $\beta$ is the supremum of $k-\frac{s_k}{\tau}$, $\beta$ is
+%   finite if and only if $k-\frac{s_k}{\tau}$ is upper bounded. From
+%   Theorem~\ref{th:I:fekete} (Equation~(\ref{eq:I:selectN})) it follows
+%   that for any $\varepsilon>0$
+%   \begin{equation*}
+%     \forall k\geq \overline k\equals\frac 2\varepsilon \max_r\left\{\frac r m s_m-s_r\right\}
+%     \qquad
+%     \tau-\frac{s_k}{k} < \varepsilon
+%   \end{equation*}
+%   where $m$ is such that $\frac{s_m}m > \tau - \frac{\varepsilon}2$
+%   (notice that such an $m$ always exists because $\tau$ is the
+%   supremum of $\frac{s_k}k$).
+
+%   For all $k\geq\overline{k}$
+%   \begin{equation*}
+%     \tau-\frac{s_k}{\overline k} \leq \tau-\frac{s_k}{k} < \varepsilon
+%     \qquad\Rightarrow\qquad
+%     \tau-\frac{s_k}{\overline k} < \varepsilon
+%   \end{equation*}
+  
+% \end{proof}
+
+
+The burstiness $\beta$ is defined, starting from the worst-case
+sequence $s_k$. Next lemma provides an interpretation of $\beta$ into
+the sequence of sampling instants $\{t_k\}_{k\in\NN}$
+
+\begin{lemma}
+  \begin{equation}
+    \beta=\sup_{k,j\in\NN}\left\{k-\frac{t_{k+j}-t_j}{\tau}\right\}
+    \label{eq:I:propB}
+  \end{equation}
+\end{lemma}
+\begin{proof}
+  \begin{align*}
+    \beta= \sup_k\left\{k-\frac{s_k}{\tau}\right\}
+    & = \sup_k\left\{k-\frac{\inf_j\{t_{k+j}-t_j\}}\tau\right\} \\
+    & = \sup_k\left\{k+\frac{\sup_j\{-t_{k+j}+t_j\}}\tau\right\} \\
+    & = \sup_{k,j}\left\{k-\frac{t_{k+j}-t_j}\tau\right\}
+  \end{align*}
+  as required.
+\end{proof}
+
+In Equation~(\ref{eq:I:propB}), the supremum is performed on all the
+pairs of instants that are separated by $k$ intervals and starts with
+at the $j^\text{th}$ instant. 
+
+The two sequences $\{4,12,4,12,4,12,\ldots\}$ and
+$\{4,4,4,12,12,12,\ldots\}$ have the same asymptotic period
+$\tau=8$. However they have a burstiness value $\beta$ respectively
+equal to $\frac 12$ and $\frac 32$ respectively. Other sequences with
+the same period $\tau=8$ and burstiness $\beta=\frac 12$ are
+$\{4,8,8,8,8,8,\ldots\}$, $\{6,6,8,10,10,6,6,8,10,10,\ldots\}$
+
+Below we provide some properties of the burstiness $\beta$ of a sequence.
+\begin{lemma}
+  Given a sequence $\{t_k\}_{k\in\NN}$, let $\beta$ be its burstiness.
+  Then
+  \begin{equation*}
+    % \label{eq:I:bPos}
+    \beta\geq 0
+  \end{equation*}
+\end{lemma}
+\begin{proof}
+  When $k=0$, then $k-\frac{t_{k+j}-t_j}\tau=0$. Hence
+  \begin{equation*}
+    0\in\left\{k-\frac{t_{k+j}-t_j}\tau:k,j\in\NN\right\}
+    \quad\Rightarrow\quad
+    \beta=\sup_{k,j\in\NN}\left\{k-\frac{t_{k+j}-t_j}\tau\right\}\geq 0  
+  \end{equation*}
+  as required.
+\end{proof}
+
+In some sense the burstiness $\beta$ measures the ``deviation'' from a
+periodic sampling sequence. In fact we have
+\begin{lemma}
+  A sampling sequence is periodic \textbf{if and only if} its
+  burstiness $\beta$ is equal to $0$.
+\end{lemma}
+\begin{proof}
+  If a sampling sequence is periodic with period $\tau$, then
+  $t_k=k\tau$. Hence
+  \begin{equation*}
+    \forall k,j\in\NN,\quad k-\frac{t_{k+j}-t_j}\tau= k-\frac{(k+j)\tau -j\tau}\tau = 0
+  \end{equation*}
+  and from the definition of $\beta$, it follows that $\beta=0$.
+
+  On the other hand, let us suppose by contradiction that a sequence is
+  periodic and has $\beta>0$. Then it exists some $k$ and $j$ with
+  \begin{equation*}
+    k-\frac{t_{k+j}-t_j}\tau = c>0
+    \quad\Rightarrow\quad
+    t_{k+j}-t_j = (k-c)\tau
+  \end{equation*}
+  hence $t_j$ and $t_{k+j}$ are separated by a quantity that is
+  strictly less than $k\tau$ contradicting the periodicity.
+\end{proof}
+
+
+
+\bibliographystyle{plain}
+\bibliography{enrico.bib}
+
+\end{document}
+
+
